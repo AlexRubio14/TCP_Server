@@ -4,8 +4,15 @@
 
 #define LISTENER_PORT 55000
 
-enum TipoPaquete { HANDSHAKE, LOGIN, MOVIMIENTO };
+enum TipoPaquete { HANDSHAKE, LOGIN, REGISTER, MOVIMIENTO, TEST, WAIT };
 
+void Test(sf::Packet& data)
+{
+	std::string message;
+	data >> message;
+
+	std::cout << "Mensaje recibido del cliente: " << message << std::endl;
+}
 
 sf::Packet& operator >>(sf::Packet& packet, TipoPaquete& tipo)
 {
@@ -21,7 +28,7 @@ void HandShake(sf::Packet& data)
 	std::string message;
 	data >> message;
 
-	std::cout << "Mensaje recibido del servidor: " << message << std::endl;
+	std::cout << "Mensaje recibido del cliente: " << message << std::endl;
 }
 
 // ----------------------------------- Server -----------------------------------
@@ -40,7 +47,7 @@ void main()
 
 	//listener.setBlocking(false);
 
-	if (listener.listen(LISTENER_PORT) != sf::Socket::Status::Done)
+	if (listener.listen(LISTENER_PORT) != sf::Socket::Status::Done) // TODO: Manejar escuchar nuevos puertos
 	{
 		std::cerr << "No puedo escuchar el puerto!" << std::endl;
 		closeServer = true;
@@ -73,16 +80,41 @@ void main()
 						sf::Packet packet;
 						if (clients[i]->receive(packet) == sf::Socket::Status::Done)
 						{
-							std::string message;
-							packet >> message;
+							//std::cout << "Input recibido de la direccion: " << client.getRemoteAddress().value() << std::endl;
 
-							std::cout << "Mensaje recibido: " << message << std::endl;
+							std::string receivedMessage;
+
+							TipoPaquete type;
+							packet >> type;
+
+							switch (type)
+							{
+							case HANDSHAKE:
+								HandShake(packet);
+								break;
+							case LOGIN:
+								break;
+							case REGISTER:
+								break;
+							case MOVIMIENTO:
+								break;
+							case TEST:
+								Test(packet);
+								break;
+							case WAIT:
+								break;
+							default:
+								break;
+							}
+
+
+							packet.clear();
 						}
 						if (clients[i]->receive(packet) == sf::Socket::Status::Disconnected)
 						{
-							std::cout << "Cliente desconectado con la direccion: " << clients[i]->getRemoteAddress().value() << std::endl;
-							socketSelector.remove(*clients[i]);
+							std::cout << "Cliente desconectado en la direccion: " << clients[i]->getRemoteAddress().value() << std::endl;
 							delete clients[i];
+							socketSelector.remove(*clients[i]);
 							clients.erase(clients.begin() + i);
 							i--;
 						}
@@ -91,11 +123,10 @@ void main()
 			}
 		}
 
-		/*std::cout << "Esperando conexiones..." << std::endl;
 
-		if (listener.accept(client) == sf::Socket::Status::Done)
+		/*if (listener.accept(client) == sf::Socket::Status::Done)
 		{
-			std::cout << "Cliente conectado desde " << client.getRemoteAddress().value() << std::endl;
+			
 
 			sf::Packet packet;
 			std::string message = "Hola cliente";
