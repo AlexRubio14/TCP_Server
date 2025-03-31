@@ -113,8 +113,8 @@ void main()
 						if (clients[i]->receive(packet) == sf::Socket::Status::Disconnected)
 						{
 							std::cout << "Cliente desconectado en la direccion: " << clients[i]->getRemoteAddress().value() << std::endl;
-							delete clients[i];
 							socketSelector.remove(*clients[i]);
+							delete clients[i];
 							clients.erase(clients.begin() + i);
 							i--;
 						}
