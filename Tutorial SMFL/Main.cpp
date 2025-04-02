@@ -4,7 +4,6 @@
 
 #define LISTENER_PORT 55000
 
-enum TipoPaquete { HANDSHAKE, LOGIN, REGISTER, MOVIMIENTO, TEST, WAIT };
 
 void Test(sf::Packet& data)
 {
@@ -14,14 +13,7 @@ void Test(sf::Packet& data)
 	std::cout << "Mensaje recibido del cliente: " << message << std::endl;
 }
 
-sf::Packet& operator >>(sf::Packet& packet, TipoPaquete& tipo)
-{
-	int temp;
-	packet >> temp;
-	tipo = static_cast<TipoPaquete>(temp);
 
-	return packet;
-}
 
 void HandShake(sf::Packet& data)
 {
@@ -44,8 +36,6 @@ void main()
 	sf::TcpSocket* newClient;
 
 	bool closeServer = false;
-
-	//listener.setBlocking(false);
 
 	if (listener.listen(LISTENER_PORT) != sf::Socket::Status::Done) // TODO: Manejar escuchar nuevos puertos
 	{
