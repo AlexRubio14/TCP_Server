@@ -1,16 +1,30 @@
 #include "PacketHandler.h"
+#include <iostream>
 
-void PacketHandler::ProcessPacket(std::unique_ptr<CustomPacket> customPacket)
+void PacketHandler::HandleHandshake(sf::Packet& packet)
 {
-	std::string receivedMessage;
+	std::string message;
+	packet >> message;
+	
+	std::cout << "Mensaje recibido del cliente: " << message << std::endl;
+}
 
-	TipoPaquete type;
-	packet >> type;
+void PacketHandler::HandleTest(sf::Packet& packet)
+{
+	std::string message;
+	packet >> message;
+	
+	std::cout << "Mensaje recibido del cliente: " << message << std::endl;
+}
 
-	switch (type)
+void PacketHandler::ProcessPacket(CustomPacket customPacket)
+{
+	customPacket.packet >> customPacket.type;
+
+	switch (customPacket.type)
 	{
 	case HANDSHAKE:
-		HandShake(packet);
+		HandleHandshake(customPacket.packet);
 		break;
 	case LOGIN:
 		break;
@@ -19,7 +33,7 @@ void PacketHandler::ProcessPacket(std::unique_ptr<CustomPacket> customPacket)
 	case MOVIMIENTO:
 		break;
 	case TEST:
-		Test(packet);
+		HandleTest(customPacket.packet);
 		break;
 	case WAIT:
 		break;

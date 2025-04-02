@@ -5,9 +5,12 @@ class PacketHandler
 {
 private:
 
-public:
-	void HandleIncomingPackets();
+	void HandleHandshake(sf::Packet& packet);
 
-	void ProcessPacket(std::unique_ptr<CustomPacket> customPacket);
+	void HandleTest(sf::Packet& packet);
+
+public:
+
+	void ProcessPacket(CustomPacket customPacket);
 };
 

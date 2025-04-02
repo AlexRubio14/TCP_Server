@@ -31,7 +31,7 @@ void Server::Update()
                 {
                     newClient->setBlocking(false);
                     socketSelector.add(*newClient);
-                    clients.emplace_back(std::make_unique<ClientHandler>(std::move(*newClient)));
+                    clients.emplace_back(std::make_unique<ClientHandler>(std::move(newClient)));
                     std::cout << "Nuevo cliente conectado." << std::endl;
                 }
             }
@@ -39,7 +39,7 @@ void Server::Update()
             {
                 for (const std::unique_ptr<ClientHandler>& client : clients) 
                 {
-                    if (socketSelector.isReady(client->getSocket())) 
+                    if (socketSelector.isReady(*client->getSocket())) 
                         client->HandleIncomingPackets();
                 }
             }

@@ -9,12 +9,12 @@ ClientHandler::ClientHandler(std::unique_ptr<sf::TcpSocket> clientSocket)
 
 void ClientHandler::HandleIncomingPackets()
 {
-    std::unique_ptr<CustomPacket> customPacket = std::make_unique<CustomPacket>();
+    CustomPacket customPacket;
 
-    if (socket->receive(customPacket->packet) == sf::Socket::Status::Done) {
-        packetHandler.ProcessPacket(customPacket.get);
+    if (socket->receive(customPacket.packet) == sf::Socket::Status::Done) {
+        packetHandler.ProcessPacket(customPacket);
     }
-    if (socket->receive(customPacket->packet) == sf::Socket::Status::Disconnected)
+    if (socket->receive(customPacket.packet) == sf::Socket::Status::Disconnected)
     {
         std::cout << "Cliente desconectado en la direccion: " << socket->getRemoteAddress().value() << std::endl;
         /*socketSelector.remove(*clients[i]);
