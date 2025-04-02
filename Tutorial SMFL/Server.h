@@ -4,7 +4,7 @@
 #include <memory>
 #include "ClientHandler.h"
 
-#define LISTENER_PORT 55000
+#define LISTENER_PORT 55001
 
 class Server {
 private:
@@ -20,7 +20,7 @@ public:
 
     ~Server();
 
-    void start();
+    void Start();
 
     void Update();
 };

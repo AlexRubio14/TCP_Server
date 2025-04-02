@@ -1,5 +1,4 @@
 #include <vector>
-#include "CustomPacket.h"
 #include "PacketHandler.h"
 
 class ClientHandler {
@@ -13,5 +12,5 @@ public:
 
     void HandleIncomingPackets();
 
-    inline sf::TcpSocket* getSocket() { return socket.get(); }
+    inline sf::TcpSocket* GetSocket() { return socket.get(); }
 };

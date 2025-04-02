@@ -6,7 +6,7 @@
 void main()
 {
 	Server server;
-	server.start();
+	server.Start();
 	server.Update();
 }
 

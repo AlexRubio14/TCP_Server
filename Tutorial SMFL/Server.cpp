@@ -5,12 +5,13 @@ Server::Server()
     isRunning = true;
 }
 
-void Server::start()
+void Server::Start()
 {
     if (listener.listen(LISTENER_PORT) != sf::Socket::Status::Done) // TODO: Manejar escuchar nuevos puertos
     {
         std::cerr << "No puedo escuchar el puerto!" << std::endl;
-        isRunning = false;                                                                                                                                                                                                           
+        isRunning = false; 
+        return;
     }
 
     socketSelector.add(listener);
@@ -39,7 +40,7 @@ void Server::Update()
             {
                 for (const std::unique_ptr<ClientHandler>& client : clients) 
                 {
-                    if (socketSelector.isReady(*client->getSocket())) 
+                    if (socketSelector.isReady(*client->GetSocket())) 
                         client->HandleIncomingPackets();
                 }
             }
