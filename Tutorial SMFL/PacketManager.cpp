@@ -1,7 +1,7 @@
-#include "PacketHandler.h"
+#include "PacketManager.h"
 #include <iostream>
 
-void PacketHandler::HandleHandshake(sf::Packet& packet)
+void PacketManager::HandleHandshake(sf::Packet& packet)
 {
 	std::string message;
 	packet >> message;
@@ -9,7 +9,7 @@ void PacketHandler::HandleHandshake(sf::Packet& packet)
 	std::cout << "Mensaje recibido del cliente: " << message << std::endl;
 }
 
-void PacketHandler::HandleTest(sf::Packet& packet)
+void PacketManager::HandleTest(sf::Packet& packet)
 {
 	std::string message;
 	packet >> message;
@@ -17,7 +17,7 @@ void PacketHandler::HandleTest(sf::Packet& packet)
 	std::cout << "Mensaje recibido del cliente: " << message << std::endl;
 }
 
-void PacketHandler::ProcessPacket(CustomPacket customPacket)
+void PacketManager::ProcessPacket(CustomPacket customPacket)
 {
 	customPacket.packet >> customPacket.type;
 

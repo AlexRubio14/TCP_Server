@@ -21,10 +21,10 @@
     <ClCompile Include="Server.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ClientHandler.cpp">
+    <ClCompile Include="ClientManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="PacketHandler.cpp">
+    <ClCompile Include="PacketManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="CustomPacket.cpp">
@@ -35,13 +35,13 @@
     <ClInclude Include="Server.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ClientHandler.h">
+    <ClInclude Include="ClientManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="CustomPacket.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="PacketHandler.h">
+    <ClInclude Include="PacketManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

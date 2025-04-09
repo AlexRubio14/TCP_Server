@@ -2,15 +2,15 @@
 #include <SFML/Network.hpp>
 #include <iostream>
 #include <memory>
-#include "ClientHandler.h"
+#include "ClientManager.h"
 
-#define LISTENER_PORT 55001
+#define LISTENER_PORT 55000
 
 class Server {
 private:
     sf::TcpListener listener;
     sf::SocketSelector socketSelector;
-    std::vector<std::unique_ptr<ClientHandler>> clients;
+    std::vector<std::unique_ptr<ClientManager>> clients;
 
     bool isRunning;
 

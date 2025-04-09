@@ -1,7 +1,7 @@
 #pragma once
 #include "CustomPacket.h"
 
-class PacketHandler
+class PacketManager
 {
 private:
 

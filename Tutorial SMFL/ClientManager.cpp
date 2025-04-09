@@ -1,13 +1,13 @@
-#include "ClientHandler.h"
+#include "ClientManager.h"
 #include <iostream>
 
-ClientHandler::ClientHandler(std::unique_ptr<sf::TcpSocket> clientSocket)
+ClientManager::ClientManager(std::unique_ptr<sf::TcpSocket> clientSocket)
     : socket(std::move(clientSocket)) 
 { 
     socket->setBlocking(false);
 }
 
-void ClientHandler::HandleIncomingPackets()
+void ClientManager::HandleIncomingPackets()
 {
     CustomPacket customPacket;
 
