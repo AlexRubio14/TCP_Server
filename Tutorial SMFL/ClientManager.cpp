@@ -1,5 +1,23 @@
 #include "ClientManager.h"
 #include <iostream>
+#include "EventManager.h"
+#include "PacketType.h"
+
+ClientManager& ClientManager::Instance()
+{
+    static ClientManager instance;
+    return instance;
+}
+
+void ClientManager::Init()
+{
+    EVENT_MANAGER.Subscribe(REGISTER, [](int guid, CustomPacket& packet) {
+    });
+
+    EVENT_MANAGER.Subscribe(DISCONNECT, [this](int guid, CustomPacket& customPacket) {
+        DisconnectClient(guid);
+    });
+}
 
 ClientManager::ClientManager(std::unique_ptr<sf::TcpSocket> clientSocket)
     : socket(std::move(clientSocket)) 
@@ -7,19 +25,42 @@ ClientManager::ClientManager(std::unique_ptr<sf::TcpSocket> clientSocket)
     socket->setBlocking(false);
 }
 
-void ClientManager::HandleIncomingPackets()
+Client& ClientManager::CreateClient()
 {
-    CustomPacket customPacket;
+    //TODO: create GUID
+    int guid = guidCount;
+    guidCount++;
 
-    if (socket->receive(customPacket.packet) == sf::Socket::Status::Done) {
-        packetHandler.ProcessPacket(customPacket);
-    }
-    if (socket->receive(customPacket.packet) == sf::Socket::Status::Disconnected)
+    std::unique_ptr<Client> client = std::make_unique<Client>();
+    clients[guid] = std::move(client);
+
+    return *clients[guid];
+}
+
+void ClientManager::DisconnectClient(int guid)
+{
+    clients.erase(guid);
+    std::cout << "Client deleted from unorderedMap" << std::endl;
+}
+
+int ClientManager::CreateGuid()
+{
+    return 0;
+}
+
+void ClientManager::UpdateClients(sf::SocketSelector& _socketSelector)
+{
+    for (auto& [id, client] : clients) //Structure Binding implemented in c++ v17
     {
-        std::cout << "Cliente desconectado en la direccion: " << socket->getRemoteAddress().value() << std::endl;
-        /*socketSelector.remove(*clients[i]);
-        delete clients[i];
-        clients.erase(clients.begin() + i);
-        i--;*/
+        if (client && _socketSelector.isReady(client->GetSocket())) 
+        {
+            client->HandleIncomingPackets();
+        }
+        else if (!client)
+        {
+            std::cerr << "Invalid client pointer detected for client ID: " << id << std::endl;
+        }
     }
 }
+
+

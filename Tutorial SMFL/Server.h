@@ -10,7 +10,6 @@ class Server {
 private:
     sf::TcpListener listener;
     sf::SocketSelector socketSelector;
-    std::vector<std::unique_ptr<ClientManager>> clients;
 
     bool isRunning;
 
@@ -23,5 +22,7 @@ public:
     void Start();
 
     void Update();
+
+    void HandleNewConnection();
 };
 
