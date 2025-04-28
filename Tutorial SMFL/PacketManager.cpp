@@ -1,6 +1,6 @@
 #include "PacketManager.h"
 #include <iostream>
-
+#include "EventManager.h"
 void PacketManager::HandleHandshake(sf::Packet& packet)
 {
 	std::string message;
@@ -17,29 +17,28 @@ void PacketManager::HandleTest(sf::Packet& packet)
 	std::cout << "Mensaje recibido del cliente: " << message << std::endl;
 }
 
-void PacketManager::ProcessPacket(CustomPacket customPacket)
+PacketManager& PacketManager::Instance()
+{
+	static PacketManager instance;
+	return instance;
+}
+
+void PacketManager::Init()
+{
+	EVENT_MANAGER.Subscribe(HANDSHAKE, [this](int guid, CustomPacket& customPacket) {
+		HandleHandshake(customPacket.packet);
+		});
+
+	EVENT_MANAGER.Subscribe(TEST, [this](int guid, CustomPacket& customPacket) {
+		HandleTest(customPacket.packet);
+		});
+}
+
+void PacketManager::ProcessPacket(int guid, CustomPacket customPacket)
 {
 	customPacket.packet >> customPacket.type;
 
-	switch (customPacket.type)
-	{
-	case HANDSHAKE:
-		HandleHandshake(customPacket.packet);
-		break;
-	case LOGIN:
-		break;
-	case REGISTER:
-		break;
-	case MOVIMIENTO:
-		break;
-	case TEST:
-		HandleTest(customPacket.packet);
-		break;
-	case WAIT:
-		break;
-	default:
-		break;
-	}
+	std::cout << customPacket.type << std::endl;
 
-	customPacket.packet.clear();
+	EVENT_MANAGER.Emit(customPacket.type, guid, customPacket);
 }

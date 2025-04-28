@@ -135,15 +135,19 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Client.cpp" />
     <ClCompile Include="ClientManager.cpp" />
     <ClCompile Include="CustomPacket.cpp" />
+    <ClCompile Include="EventManager.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="PacketManager.cpp" />
     <ClCompile Include="Server.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Client.h" />
     <ClInclude Include="ClientManager.h" />
     <ClInclude Include="CustomPacket.h" />
+    <ClInclude Include="EventManager.h" />
     <ClInclude Include="PacketManager.h" />
     <ClInclude Include="Server.h" />
   </ItemGroup>
