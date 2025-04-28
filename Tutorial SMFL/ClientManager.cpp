@@ -31,7 +31,7 @@ Client& ClientManager::CreateClient()
     int guid = guidCount;
     guidCount++;
 
-    std::unique_ptr<Client> client = std::make_unique<Client>();
+    std::unique_ptr<Client> client = std::make_unique<Client>(guid);
     clients[guid] = std::move(client);
 
     return *clients[guid];
@@ -49,9 +49,9 @@ int ClientManager::CreateGuid()
 }
 
 void ClientManager::UpdateClients(sf::SocketSelector& _socketSelector)
-{
-    for (auto& [id, client] : clients) //Structure Binding implemented in c++ v17
-    {
+{//Structure Binding improved in c++ v17 and considered best practice in modern c++, auto is compulsory using this feature because the linker needs to deduct the type of the variable
+	for (auto& [id, client] : clients) 
+	{
         if (client && _socketSelector.isReady(client->GetSocket())) 
         {
             client->HandleIncomingPackets();
@@ -60,6 +60,23 @@ void ClientManager::UpdateClients(sf::SocketSelector& _socketSelector)
         {
             std::cerr << "Invalid client pointer detected for client ID: " << id << std::endl;
         }
+    }
+
+    std::cout << clients.size() << std::endl;
+}
+
+Client* ClientManager::GetClientById(int guid)
+{
+	std::unordered_map<int, std::unique_ptr<Client>>::iterator it = clients.find(guid);
+
+    if (it != clients.end())
+    {
+        return it->second.get();
+    }
+    else
+    {
+        std::cerr << "Client with GUID " << guid << " not found." << std::endl;
+        return nullptr;
     }
 }
 

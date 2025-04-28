@@ -12,22 +12,22 @@ void Server::Start()
     if (listener.listen(LISTENER_PORT) == sf::Socket::Status::Done)
     {
         socketSelector.add(listener);
+
+        EVENT_MANAGER.Subscribe(DISCONNECT, [this](int guid, CustomPacket& customPacket) {
+            Client* client = CLIENT_MANAGER.GetClientById(guid);
+            if (client != nullptr)
+            {
+                socketSelector.remove(client->GetSocket());
+                std::cout << "socket erased from socketSelector" << std::endl;
+            }
+            else
+            {
+                std::cerr << "Trying to disconnect non-existing client ( guid = " << guid << ")" << std::endl;
+            }
+        });
+
         CLIENT_MANAGER.Init();
 		PACKET_MANAGER.Init();
-
-        //EVENT_MANAGER.Subscribe(DISCONNECT, [this](int guid, CustomPacket& customPacket) {
-        //    Client& client = CLIENT_MANAGER.GetClientById(guid);
-        //    /*if (client)
-        //    {
-        //        socketSelector.remove(client.GetSocket());
-        //        std::cout << "socket erased from socketSelector" << std::endl;
-        //    }
-        //    else
-        //    {
-        //        std::cerr << "Trying to disconnect non-existing client ( guid = " << guid << ")" << std::endl;
-        //    }*/
-        //    
-        //});
 
         std::cout << "Servidor iniciado en el puerto " << LISTENER_PORT << std::endl;
     }

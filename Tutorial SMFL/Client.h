@@ -12,7 +12,8 @@ private:
 
 public:
 
-	Client();
+	Client() = default;
+	Client(const int guid);
 	~Client();
 
 	void HandleIncomingPackets();

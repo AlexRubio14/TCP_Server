@@ -4,11 +4,12 @@
 #include "PacketType.h"
 #include <iostream>
 
-Client::Client()
+Client::Client(const int _guid)
 {
-	socket = std::make_unique<sf::TcpSocket>();
+    socket = std::make_unique<sf::TcpSocket>();
 
-	//TODO: Crear el GUID y darle el nickname con una query a la database
+    //TODO: Crear el GUID y darle el nickname con una query a la database
+    guid = _guid;
 }
 
 Client::~Client()

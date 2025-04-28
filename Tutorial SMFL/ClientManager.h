@@ -34,5 +34,5 @@ public:
 
     void UpdateClients(sf::SocketSelector& _socketSelector);
 
-    inline Client& GetClientById(int guid) { return *clients[guid]; }
+    Client* GetClientById(int guid);
 };
