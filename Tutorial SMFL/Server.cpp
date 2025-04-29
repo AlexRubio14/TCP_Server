@@ -1,6 +1,7 @@
 #include "Server.h"
 #include "Client.h"
 #include "EventManager.h"
+#include "DatabaseManager.h"
 
 Server::Server()
 {
@@ -11,7 +12,11 @@ void Server::Start()
 {
     if (listener.listen(LISTENER_PORT) == sf::Socket::Status::Done)
     {
+        std::cout << "Server launched at port: " << LISTENER_PORT << std::endl;
+
         socketSelector.add(listener);
+
+        DB_MANAGER.ConnectDb();
 
         EVENT_MANAGER.Subscribe(DISCONNECT, [this](int guid, CustomPacket& customPacket) {
             Client* client = CLIENT_MANAGER.GetClientById(guid);
@@ -28,13 +33,11 @@ void Server::Start()
 
         CLIENT_MANAGER.Init();
 		PACKET_MANAGER.Init();
-
-        std::cout << "Servidor iniciado en el puerto " << LISTENER_PORT << std::endl;
     }
     else
     {
         isRunning = false;
-        std::cerr << "No puedo escuchar el puerto!" << std::endl;
+        std::cerr << "I can't listen to the port: " << LISTENER_PORT << std::endl;
         return;
     }
 }
@@ -55,6 +58,8 @@ void Server::Update()
             }
         }
     }
+
+    DB_MANAGER.DisconnectDb();
 }
 
 void Server::HandleNewConnection()
@@ -65,7 +70,7 @@ void Server::HandleNewConnection()
     {
         newClient.GetSocket().setBlocking(false);
         socketSelector.add(newClient.GetSocket());
-        std::cout << "Nuevo cliente conectado." << std::endl;
+        std::cout << "New client connected" << std::endl;
     }
 }
 

@@ -61,8 +61,6 @@ void ClientManager::UpdateClients(sf::SocketSelector& _socketSelector)
             std::cerr << "Invalid client pointer detected for client ID: " << id << std::endl;
         }
     }
-
-    std::cout << clients.size() << std::endl;
 }
 
 Client* ClientManager::GetClientById(int guid)

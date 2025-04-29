@@ -1,6 +1,6 @@
 #include <SFML/Network.hpp>
 #include "Server.h"
-
+#include "DatabaseManager.h"
 // ----------------------------------- Server -----------------------------------
 
 void main()
