@@ -8,7 +8,7 @@ void PacketManager::HandleHandshake(sf::Packet& packet)
 	std::string messageFromClient;
 	packet >> messageFromClient;
 	
-	std::cout << "Mensaje recibido del cliente: " << messageFromClient << std::endl;
+	std::cout << "Messages received from client: " << messageFromClient << std::endl;
 }
 
 void PacketManager::HandleTest(sf::Packet& packet)
@@ -16,12 +16,12 @@ void PacketManager::HandleTest(sf::Packet& packet)
 	std::string message;
 	packet >> message;
 	
-	std::cout << "Mensaje recibido del cliente: " << message << std::endl;
+	std::cout << "Message received from client: " << message << std::endl;
 }
 
 void PacketManager::SendHandshake(const std::string guid)
 {
-	std::string responseMessage = "Hola cliente, soy el servidor";
+	std::string responseMessage = "Hello client, i'm the server";
 	CustomPacket responsePacket(HANDSHAKE);
 
 	responsePacket.packet << responsePacket.type << responseMessage;
@@ -29,10 +29,8 @@ void PacketManager::SendHandshake(const std::string guid)
 	std::shared_ptr<Client> client = CLIENT_MANAGER.GetPendingClientById(guid);
 	if (client != nullptr)
 	{
-		if (client->GetSocket().send(responsePacket.packet) == sf::Socket::Status::Done)
-			std::cout << "Mensaje enviado al cliente: " << responseMessage << std::endl;
-		else
-			std::cerr << "Error al enviar el mensaje al cliente." << std::endl;
+		SendPacketToClient(client, responsePacket);
+		std::cout << "Message send to client: " << responseMessage << std::endl;
 	}
 }
 
@@ -47,27 +45,135 @@ void PacketManager::Init()
 	EVENT_MANAGER.Subscribe(HANDSHAKE, [this](std::string guid, CustomPacket& customPacket) {
 		HandleHandshake(customPacket.packet);
 		SendHandshake(guid);
-		});
+	});
 
 	EVENT_MANAGER.Subscribe(TEST, [this](std::string guid, CustomPacket& customPacket) {
 		HandleTest(customPacket.packet);
-		});
+	});
 
 	EVENT_MANAGER.Subscribe(REGISTER, [](std::string guid, CustomPacket& customPacket) {
 		std::string username;
 		std::string password;
 		customPacket.packet >> username >> password;
 
-		if (DB_MANAGER.CreateUser(username, password))
+		std::string message;
+		CustomPacket responsePacket;
+
+		switch (DB_MANAGER.CreateUser(username, password))
 		{
-			CLIENT_MANAGER.PromoteClientToAuthenticated(guid, username);
-			
-			//TODO: send a meesage to client register_Succesful
+		case RegisterResult::SUCCESS: {
+			message = "User registered successfully";
+			responsePacket.packet << REGISTER_SUCCES << message;
+
+
+			std::string authGuid = CLIENT_MANAGER.PromoteClientToAuthenticated(guid, username);
+			EVENT_MANAGER.Emit(REGISTER_SUCCES, authGuid, responsePacket);
+			std::cout << "User " << username << " registered successfully nad promoted to authenticated" << std::endl;
+			break;
 		}
-		});
+		case RegisterResult::USERNAME_TAKEN:
 
-	//TODO: send a meesage to client register_error
+			message = "Username already taken";
+			responsePacket.packet << REGISTER_ERROR << message;
 
+			EVENT_MANAGER.Emit(REGISTER_ERROR, guid, responsePacket); 
+			std::cout << "User " << username << " failed to register because: " << message << std::endl;
+			break;
+		case RegisterResult::QUERY_ERROR:
+
+			message = "Error querying the database";
+			responsePacket.packet << REGISTER_ERROR << message;
+
+			EVENT_MANAGER.Emit(REGISTER_ERROR, guid, responsePacket);
+			std::cout << "User " << username << " failed to register because: " << message << std::endl;
+			break;
+		case RegisterResult::INSERT_FAILED:
+
+			message = "Error inserting the user into the database";
+			responsePacket.packet << REGISTER_ERROR << message;
+
+			EVENT_MANAGER.Emit(REGISTER_ERROR, guid, responsePacket);
+			std::cout << "User " << username << " failed to register because: " << message << std::endl;
+			break;
+		default:
+			break;
+		}
+	});
+
+	EVENT_MANAGER.Subscribe(REGISTER_ERROR, [this](std::string guid, CustomPacket& customPacket) {
+
+		std::shared_ptr<Client> client = CLIENT_MANAGER.GetPendingClientById(guid);
+		
+		if(client != nullptr)
+			SendPacketToClient(client, customPacket);
+	});
+
+	EVENT_MANAGER.Subscribe(REGISTER_SUCCES, [this](std::string guid, CustomPacket& customPacket) {
+		
+		std::shared_ptr<Client> client = CLIENT_MANAGER.GetAuthoritedClientById(guid);
+		
+		if (client != nullptr)
+			SendPacketToClient(client, customPacket);
+	});
+
+	EVENT_MANAGER.Subscribe(LOGIN, [this](std::string guid, CustomPacket& customPacket) {
+
+		std::string username;
+		std::string password;
+		customPacket.packet >> username >> password;
+
+		std::string message;
+		CustomPacket responsePacket;
+
+		switch (DB_MANAGER.ValidateUser(username, password))
+		{
+		case LoginResult::SUCCESS: {
+
+			message = "User logged in successfully";
+			responsePacket.packet << LOGIN_SUCCESS << message;
+
+			std::string authGuid = CLIENT_MANAGER.PromoteClientToAuthenticated(guid, username);
+			EVENT_MANAGER.Emit(LOGIN_SUCCESS, authGuid, responsePacket);
+			std::cout << "User " << username << " logged in successfully and promoted to Authenticated" << std::endl;
+			break;
+		}
+		case LoginResult::INVALID_CREDENTIALS:
+
+			message = "Credentials used for login are invalid";
+			responsePacket.packet << LOGIN_ERROR << message;
+
+			EVENT_MANAGER.Emit(LOGIN_ERROR, guid, responsePacket);
+			std::cout << "User " << username << " failed to log in because: " << message << std::endl;
+
+			break;
+		case LoginResult::QUERY_ERROR:
+
+			message = "Error querying the database";
+			responsePacket.packet << LOGIN_ERROR << message;
+
+			EVENT_MANAGER.Emit(LOGIN_ERROR, guid, responsePacket);
+			std::cout << message << std::endl;
+			break;
+		default:
+			break;
+		}
+	});
+
+	EVENT_MANAGER.Subscribe(LOGIN_ERROR, [this](std::string guid, CustomPacket& customPacket) {
+		
+		std::shared_ptr<Client> client = CLIENT_MANAGER.GetPendingClientById(guid);
+		
+		if (client != nullptr)
+			SendPacketToClient(client, customPacket);
+	});
+
+	EVENT_MANAGER.Subscribe(LOGIN_SUCCESS, [this](std::string guid, CustomPacket& customPacket) {
+		
+		std::shared_ptr<Client> client = CLIENT_MANAGER.GetAuthoritedClientById(guid);
+		
+		if (client != nullptr)
+			SendPacketToClient(client, customPacket);
+	});
 }
 
 void PacketManager::ProcessPacket(std::string guid, CustomPacket customPacket)
@@ -75,4 +181,12 @@ void PacketManager::ProcessPacket(std::string guid, CustomPacket customPacket)
 	customPacket.packet >> customPacket.type;
 
 	EVENT_MANAGER.Emit(customPacket.type, guid, customPacket);
+}
+
+void PacketManager::SendPacketToClient(const std::shared_ptr<Client> client, CustomPacket& responsePacket)
+{
+	if (client->GetSocket().send(responsePacket.packet) == sf::Socket::Status::Done)
+		std::cout << "Message sent to client " << std::endl;
+	else
+		std::cerr << "Error sending the message to client" << std::endl;
 }

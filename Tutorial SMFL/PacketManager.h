@@ -1,5 +1,6 @@
 #pragma once
 #include "CustomPacket.h"
+#include "Client.h"
 
 #define PACKET_MANAGER PacketManager::Instance()
 
@@ -25,5 +26,7 @@ public:
 	void Init();
 
 	void ProcessPacket(std::string guid, CustomPacket customPacket);
+
+	void SendPacketToClient(const std::shared_ptr<Client> client, CustomPacket& responsePacket);
 };
 

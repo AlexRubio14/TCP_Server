@@ -4,6 +4,8 @@
 #include <cppconn/exception.h>
 #include <cppconn/prepared_statement.h>
 #include <cppconn/resultset.h>
+#include "LoginResult.h"
+#include "RegisterResult.h"
 
 #define SERVER "127.0.0.1:3306"
 #define USERNAME "root"
@@ -31,8 +33,8 @@ public:
 	}
 	void ConnectDb();
 	void DisconnectDb();
-	bool CreateUser(const std::string username, const std::string password);
-	void CheckUserLogin(const std::string username, const std::string password);
+	RegisterResult CreateUser(const std::string& username, const std::string& password);
+	LoginResult ValidateUser(const std::string& username, const std::string& password);
 
 	std::string GenerateHashedPassword(const std::string password);
 };

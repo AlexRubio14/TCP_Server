@@ -28,40 +28,90 @@ void DatabaseManager::DisconnectDb()
     }
 }
 
-bool DatabaseManager::CreateUser(const std::string username, const std::string password)
+RegisterResult DatabaseManager::CreateUser(const std::string& username, const std::string& password)
 {
     try
     {
-        std::string query = "INSERT INTO users (username, password) VALUES (?, ?)";
-        sql::PreparedStatement* stat = con->prepareStatement(query);
+		// Check if the username already exists
+		std::string checkQuery = "SELECT id FROM users WHERE username = ?";
+        sql::PreparedStatement* checkStat = con->prepareStatement(checkQuery);
+        checkStat->setString(1, username);
+		sql::ResultSet* checkResult = checkStat->executeQuery();
+
+        if (checkResult->next())
+        {
+			std::cout << "Username: " << username << " already taken" << std::endl;
+			delete checkResult;
+			delete checkStat;
+			return RegisterResult::USERNAME_TAKEN;
+        }
+
+
+        std::string insertQuery = "INSERT INTO users (username, password) VALUES (?, ?)";
 
         std::string hashedPassword = GenerateHashedPassword(password);
+		sql::PreparedStatement* insertStat = con->prepareStatement(insertQuery);
 
-        stat->setString(1, username);
-        stat->setString(2, hashedPassword);
+        insertStat->setString(1, username);
+        insertStat->setString(2, hashedPassword);
 
-
-        int affected_rows = stat->executeUpdate();
+        int affected_rows = insertStat->executeUpdate();
+        delete insertStat;
 
         if (affected_rows > 0)
         {
-            std::cout << "User Created" << std::endl;
-            return true;
+            std::cout << "User registered in db: " << username << std::endl;
+            return RegisterResult::SUCCESS;
         }
-
-        delete stat;
-
-        return false;
+        else
+        {
+			std::cout << "An error ocurred while inserting user: " << username << std::endl;
+            return RegisterResult::INSERT_FAILED;
+        }
     }
     catch (sql::SQLException error)
     {
         std::cerr << "Error creating user because: " << error.what() << std::endl;
+		return RegisterResult::QUERY_ERROR;
     }
 }
 
-void DatabaseManager::CheckUserLogin(const std::string username, const std::string password)
+LoginResult DatabaseManager::ValidateUser(const std::string& username, const std::string& password)
 {
+	try
+	{
+		std::string query = "SELECT password FROM users WHERE username = ?";
+		sql::PreparedStatement* stat = con->prepareStatement(query);
 
+		stat->setString(1, username);
+		sql::ResultSet* result = stat->executeQuery();
+
+		// Check if the user exists
+		if (result->next())
+		{
+			std::string hashedPassword = result->getString("password");
+
+			// CHeck if the password is correct
+			if (bcrypt::validatePassword(password, hashedPassword))
+			{
+				std::cout << "User validated" << std::endl;
+				return LoginResult::SUCCESS;
+			}
+
+			std::cout << "Password not correct" << std::endl;
+		}
+
+		delete result;
+		delete stat;
+
+		std::cout << "Username not found" << std::endl;
+		return LoginResult::INVALID_CREDENTIALS;
+	}
+	catch (sql::SQLException error)
+	{
+		std::cerr << "Error validating user because: " << error.what() << std::endl;
+        return LoginResult::QUERY_ERROR;
+	}
 }
 
 std::string DatabaseManager::GenerateHashedPassword(const std::string password)

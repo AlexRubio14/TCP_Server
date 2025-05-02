@@ -104,7 +104,7 @@ void ClientManager::UpdateClients(sf::SocketSelector& _socketSelector)
     }
 }
 
-void ClientManager::PromoteClientToAuthenticated(const std::string guid, const std::string username)
+std::string ClientManager::PromoteClientToAuthenticated(const std::string guid, const std::string username)
 {
 	std::shared_ptr<Client> client = GetPendingClientById(guid);
 
@@ -114,6 +114,8 @@ void ClientManager::PromoteClientToAuthenticated(const std::string guid, const s
 	pendingClients.erase(std::remove(pendingClients.begin(), pendingClients.end(), client), pendingClients.end());
 
 	std::cout << "Client with TemporaryGUID " << guid << " promoted to authenticated." << std::endl << authenticatedClients[client->GetGuid()].get()->GetGuid() << std::endl;
+
+	return client->GetGuid();
 }
 
 void ClientManager::InitAuthenticatedClient(Client& client, const std::string username)

@@ -35,7 +35,7 @@ public:
 
     void UpdateClients(sf::SocketSelector& _socketSelector);
 
-    void PromoteClientToAuthenticated(const std::string guid, const std::string username);
+    std::string PromoteClientToAuthenticated(const std::string guid, const std::string username);
     void InitAuthenticatedClient(Client& client, const std::string username);
 
     std::shared_ptr<Client> GetAuthoritedClientById(const std::string guid);

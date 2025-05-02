@@ -5,6 +5,7 @@
 CustomPacket::CustomPacket(PacketType type)
 {
 	this->type = type;
+	packet << type;
 }
 
 sf::Packet& operator>>(sf::Packet& packet, PacketType& type)
