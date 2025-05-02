@@ -8,11 +8,11 @@
 
 class EventManager {
 public:
-    using Callback = std::function<void(int, CustomPacket&)>;
+    using Callback = std::function<void(std::string, CustomPacket&)>;
 
     void Subscribe(const PacketType type, Callback callback);
 
-    void Emit(const PacketType type, int data, CustomPacket customPacket);
+    void Emit(const PacketType type, std::string guid, CustomPacket customPacket);
 
     static EventManager& Instance();
 

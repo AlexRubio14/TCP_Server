@@ -2,21 +2,14 @@
 #include <iostream>
 #include "EventManager.h"
 #include "PacketType.h"
+#include "ClientState.h"
+#include <chrono>
+#include "SHA256.h"
 
 ClientManager& ClientManager::Instance()
 {
     static ClientManager instance;
     return instance;
-}
-
-void ClientManager::Init()
-{
-    EVENT_MANAGER.Subscribe(REGISTER, [](int guid, CustomPacket& packet) {
-    });
-
-    EVENT_MANAGER.Subscribe(DISCONNECT, [this](int guid, CustomPacket& customPacket) {
-        DisconnectClient(guid);
-    });
 }
 
 ClientManager::ClientManager(std::unique_ptr<sf::TcpSocket> clientSocket)
@@ -27,30 +20,78 @@ ClientManager::ClientManager(std::unique_ptr<sf::TcpSocket> clientSocket)
 
 Client& ClientManager::CreateClient()
 {
-    //TODO: create GUID
-    int guid = guidCount;
-    guidCount++;
+    std::shared_ptr<Client> client = std::make_shared<Client>();
 
-    std::unique_ptr<Client> client = std::make_unique<Client>(guid);
-    clients[guid] = std::move(client);
+	pendingClients.push_back(client);
 
-    return *clients[guid];
+	client->SetGuid(CreateTemporaryGuid());
+	client->SetState(PENDING);
+	std::cout << "New client created and added to pendingClients" << std::endl;
+
+    return *client;
 }
 
-void ClientManager::DisconnectClient(int guid)
+void ClientManager::DisconnectClient(std::string guid)
 {
-    clients.erase(guid);
-    std::cout << "Client deleted from unorderedMap" << std::endl;
+    auto authenticatedIt = authenticatedClients.find(guid);
+
+    if (authenticatedIt != authenticatedClients.end()) {
+        authenticatedClients.erase(authenticatedIt);
+        std::cout << "Client removed from authenticatedClients" << std::endl;
+        return;
+    }
+
+	for (auto pendingIt = pendingClients.begin(); pendingIt != pendingClients.end(); ++pendingIt) {
+		if ((*pendingIt)->GetGuid() == guid) {
+			pendingClients.erase(pendingIt);
+			std::cout << "Client removed from pendingClients" << std::endl;
+			return;
+		}
+	}
 }
 
-int ClientManager::CreateGuid()
+std::string ClientManager::CreateGuid(Client& client)
 {
-    return 0;
+	std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
+	long long duration = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();
+
+	std::string stringGuid = client.GetUsername() + std::to_string(duration);
+
+	SHA256 sha256;
+	sha256.update(stringGuid);
+
+	std::array<uint8_t, 32> hash = sha256.digest();
+
+
+    return sha256.toString(hash);
+}
+
+std::string ClientManager::CreateTemporaryGuid()
+{
+	std::string guid = std::to_string(temporaryGuidCount);
+	temporaryGuidCount++;
+	std::cout << "Temporary GUID created: " << guid << std::endl;
+	return guid;
 }
 
 void ClientManager::UpdateClients(sf::SocketSelector& _socketSelector)
-{//Structure Binding improved in c++ v17 and considered best practice in modern c++, auto is compulsory using this feature because the linker needs to deduct the type of the variable
-	for (auto& [id, client] : clients) 
+{
+	for (std::shared_ptr<Client> client : pendingClients)
+	{
+		if (client && _socketSelector.isReady(client->GetSocket()))
+		{
+			client->HandleIncomingPackets();
+		}
+		else if (!client)
+		{
+			std::cerr << "Invalid client pointer detected." << std::endl;
+		}
+	}
+    
+    //Structure Binding improved in c++ v17 and considered best practice in modern c++, 
+    // auto is compulsory using this feature because the linker needs to deduct the type of the variable
+
+	for (auto& [id, client] : authenticatedClients)
 	{
         if (client && _socketSelector.isReady(client->GetSocket())) 
         {
@@ -61,23 +102,59 @@ void ClientManager::UpdateClients(sf::SocketSelector& _socketSelector)
             std::cerr << "Invalid client pointer detected for client ID: " << id << std::endl;
         }
     }
-
-    std::cout << clients.size() << std::endl;
 }
 
-Client* ClientManager::GetClientById(int guid)
+std::string ClientManager::PromoteClientToAuthenticated(const std::string guid, const std::string username)
 {
-	std::unordered_map<int, std::unique_ptr<Client>>::iterator it = clients.find(guid);
+	std::shared_ptr<Client> client = GetPendingClientById(guid);
 
-    if (it != clients.end())
+	InitAuthenticatedClient(*client.get(), username);
+
+	authenticatedClients[client->GetGuid()] = client;
+	pendingClients.erase(std::remove(pendingClients.begin(), pendingClients.end(), client), pendingClients.end());
+
+	std::cout << "Client with TemporaryGUID " << guid << " promoted to authenticated." << std::endl << authenticatedClients[client->GetGuid()].get()->GetGuid() << std::endl;
+
+	return client->GetGuid();
+}
+
+void ClientManager::InitAuthenticatedClient(Client& client, const std::string username)
+{
+    client.SetState(AUTHENTICATED);
+	client.SetUsername(username);
+    client.SetGuid(CreateGuid(client));
+}
+
+std::shared_ptr<Client> ClientManager::GetAuthoritedClientById(const std::string guid)
+{
+	std::unordered_map<std::string, std::shared_ptr<Client>>::iterator it = authenticatedClients.find(guid);
+
+    if (it != authenticatedClients.end())
     {
-        return it->second.get();
+        std::cout << "Client with GUID " << guid << " found in authenticatedClients Map" << std::endl;
+        return it->second;
     }
     else
     {
-        std::cerr << "Client with GUID " << guid << " not found." << std::endl;
+        std::cerr << "Client with GUID " << guid << " not found in authenticatedClients Map" << std::endl;
         return nullptr;
     }
+}
+
+std::shared_ptr<Client> ClientManager::GetPendingClientById(const std::string guid)
+{
+    const auto clientIt = std::find_if(pendingClients.begin(), pendingClients.end(),
+		[guid](const std::shared_ptr<Client>& client) {
+			std::cerr << "Client with GUID " << guid << " found in pending clients Vector" << std::endl;
+
+			return client->GetGuid() == guid;
+	    });
+
+    if(clientIt != pendingClients.end())
+		return *clientIt;
+
+    std::cerr << "Client with GUID " << guid << " not found in pending clients Vector" << std::endl;
+    return nullptr;
 }
 
 

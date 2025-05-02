@@ -4,12 +4,11 @@
 #include "PacketType.h"
 #include <iostream>
 
-Client::Client(const int _guid)
+Client::Client()
 {
     socket = std::make_unique<sf::TcpSocket>();
-
-    //TODO: Crear el GUID y darle el nickname con una query a la database
-    guid = _guid;
+    clientState = NONE;
+    guid = "0";
 }
 
 Client::~Client()
@@ -22,12 +21,14 @@ void Client::HandleIncomingPackets()
 {
     CustomPacket customPacket;
 
-    if (socket->receive(customPacket.packet) == sf::Socket::Status::Done) {
-        PACKET_MANAGER.ProcessPacket(guid, customPacket);
-    }
-    else if (socket->receive(customPacket.packet) == sf::Socket::Status::Disconnected)
-    {
-        EVENT_MANAGER.Emit(DISCONNECT, guid, customPacket);
-        //std::cout << "Cliente desconectado en la direccion: " << socket->getRemoteAddress().value() << std::endl;
-    }
+	sf::Socket::Status status = socket->receive(customPacket.packet);
+
+	if (status == sf::Socket::Status::Done) {
+		customPacket.packet >> customPacket.type;
+		EVENT_MANAGER.Emit(customPacket.type, guid, customPacket);
+	}
+	else if (status == sf::Socket::Status::Disconnected)
+	{
+		EVENT_MANAGER.Emit(DISCONNECT, guid, customPacket);
+	}
 }
