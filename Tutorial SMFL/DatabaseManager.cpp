@@ -9,11 +9,11 @@ void DatabaseManager::ConnectDb()
         driver = get_driver_instance();
         con = driver->connect(SERVER, USERNAME, PASSWORD);
         con->setSchema(DATABASE);
-        std::cout << "Connection with DB DONE" << std::endl;
+        std::cout << "Connection with Db DONE" << std::endl;
     }
     catch (sql::SQLException e)
     {
-        std::cerr << "Could not connect to server because: " << e.what() << std::endl;
+        std::cerr << "Connection with Db failed because: " << e.what() << std::endl;
     }
 }
 
@@ -28,20 +28,17 @@ void DatabaseManager::DisconnectDb()
     }
 }
 
-void DatabaseManager::CreateUser(std::string username, std::string password)
+bool DatabaseManager::CreateUser(const std::string username, const std::string password)
 {
     try
     {
-        std::string query = "INSERT INTO users (username, password_hash, salt) VALUES (?, ?, ?)";
+        std::string query = "INSERT INTO users (username, password) VALUES (?, ?)";
         sql::PreparedStatement* stat = con->prepareStatement(query);
-
-		std::string salt = GenerateSalt();
 
         std::string hashedPassword = GenerateHashedPassword(password);
 
         stat->setString(1, username);
         stat->setString(2, hashedPassword);
-        stat->setString(3, salt);
 
 
         int affected_rows = stat->executeUpdate();
@@ -49,9 +46,12 @@ void DatabaseManager::CreateUser(std::string username, std::string password)
         if (affected_rows > 0)
         {
             std::cout << "User Created" << std::endl;
+            return true;
         }
 
         delete stat;
+
+        return false;
     }
     catch (sql::SQLException error)
     {
@@ -59,7 +59,7 @@ void DatabaseManager::CreateUser(std::string username, std::string password)
     }
 }
 
-void DatabaseManager::CheckUserLogin(std::string username, std::string password)
+void DatabaseManager::CheckUserLogin(const std::string username, const std::string password)
 {
 
 }
@@ -70,26 +70,6 @@ std::string DatabaseManager::GenerateHashedPassword(const std::string password)
 
 	std::string hash = bcrypt::generateHash(password, hashRound);
 
-	std::cout << "Hash generated is : " << hash << std::endl;
-
     return hash;
-}
-
-std::string DatabaseManager::GenerateSalt()
-{
-    size_t lenght = 16;
-
-    const std::string chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    std::string salt;
-
-    std::srand(std::time(0));
-
-    for (size_t i = 0; i < lenght; ++i) {
-        int randomIndex = std::rand() % chars.size();  
-        salt += chars[randomIndex];
-    }
-
-	std::cout << "Salt generated is : " << salt << std::endl;
-    return salt;
 }
 

@@ -16,12 +16,14 @@ private:
 
 	void HandleTest(sf::Packet& packet);
 
+	void SendHandshake(const std::string guid);
+
 public:
 
 	static PacketManager& Instance();
 
 	void Init();
 
-	void ProcessPacket(int guid, CustomPacket customPacket);
+	void ProcessPacket(std::string guid, CustomPacket customPacket);
 };
 

@@ -139,12 +139,14 @@
     <ClCompile Include="blowfish.cpp" />
     <ClCompile Include="Client.cpp" />
     <ClCompile Include="ClientManager.cpp" />
+    <ClCompile Include="ClientState.h" />
     <ClCompile Include="CustomPacket.cpp" />
     <ClCompile Include="DatabaseManager.cpp" />
     <ClCompile Include="EventManager.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="PacketManager.cpp" />
     <ClCompile Include="Server.cpp" />
+    <ClCompile Include="SHA256.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="bcrypt.h" />
@@ -157,6 +159,7 @@
     <ClInclude Include="openbsd.h" />
     <ClInclude Include="PacketManager.h" />
     <ClInclude Include="Server.h" />
+    <ClInclude Include="SHA256.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="PacketType.h" />

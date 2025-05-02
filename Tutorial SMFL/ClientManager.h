@@ -10,29 +10,34 @@ class ClientManager {
 private:
     std::unique_ptr<sf::TcpSocket> socket;
 
-    std::unordered_map<int,std::unique_ptr<Client>> clients;
+    std::unordered_map<std::string,std::shared_ptr<Client>> authenticatedClients;
+	std::vector<std::shared_ptr<Client>> pendingClients; // Not logged
 
     ClientManager() = default;
     ClientManager(const ClientManager&) = delete;
     ClientManager& operator=(const ClientManager&) = delete;
 
-    int guidCount = 1;
+    int temporaryGuidCount = 1;
 
 public:
 
     static ClientManager& Instance();
 
-    void Init();
-
     explicit ClientManager(std::unique_ptr<sf::TcpSocket> clientSocket);
 
     Client& CreateClient();
 
-    void DisconnectClient(int guid);
+    void DisconnectClient(std::string guid);
 
-    int CreateGuid();
+    std::string CreateGuid(Client& client);
+
+    std::string CreateTemporaryGuid();
 
     void UpdateClients(sf::SocketSelector& _socketSelector);
 
-    Client* GetClientById(int guid);
+    void PromoteClientToAuthenticated(const std::string guid, const std::string username);
+    void InitAuthenticatedClient(Client& client, const std::string username);
+
+    std::shared_ptr<Client> GetAuthoritedClientById(const std::string guid);
+    std::shared_ptr<Client> GetPendingClientById(const std::string guid);
 };

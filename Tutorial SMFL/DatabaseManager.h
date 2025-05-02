@@ -31,10 +31,9 @@ public:
 	}
 	void ConnectDb();
 	void DisconnectDb();
-	void CreateUser(std::string username, std::string password);
-	void CheckUserLogin(std::string username, std::string password);
+	bool CreateUser(const std::string username, const std::string password);
+	void CheckUserLogin(const std::string username, const std::string password);
 
 	std::string GenerateHashedPassword(const std::string password);
-	std::string GenerateSalt();
 };
 
