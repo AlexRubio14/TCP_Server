@@ -2,6 +2,7 @@
 #include "Client.h"
 #include "EventManager.h"
 #include "DatabaseManager.h"
+#include "RoomManager.h"
 
 Server::Server()
 {
@@ -26,14 +27,17 @@ void Server::Start()
                 std::cout << "Socket from: " << client->GetSocket().getRemoteAddress().value() << " erased in socketSelector" << std::endl;
 			};
 
-            if (std::shared_ptr<Client> client = CLIENT_MANAGER.GetAuthoritedClientById(guid))
+            std::shared_ptr<Client> client;
+
+            if (client = CLIENT_MANAGER.GetAuthoritedClientById(guid))
 				removeSocket(client);
-            else if (std::shared_ptr<Client> client = CLIENT_MANAGER.GetPendingClientById(guid))
+            else if (client = CLIENT_MANAGER.GetPendingClientById(guid))
 				removeSocket(client);
             else 
                 std::cerr << "Trying to disconnect non-existing client ( guid = " << guid << ")" << std::endl;
             
             CLIENT_MANAGER.DisconnectClient(guid);
+			ROOM_MANAGER.LeaveRoom(client->GetCurrentRoomId(), client);
         });
 
 		PACKET_MANAGER.Init();

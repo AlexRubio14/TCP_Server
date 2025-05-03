@@ -145,6 +145,7 @@
     <ClCompile Include="EventManager.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="PacketManager.cpp" />
+    <ClCompile Include="Room.cpp" />
     <ClCompile Include="RoomManager.cpp" />
     <ClCompile Include="Server.cpp" />
     <ClCompile Include="SHA256.cpp" />
@@ -159,6 +160,7 @@
     <ClInclude Include="node_blf.h" />
     <ClInclude Include="openbsd.h" />
     <ClInclude Include="PacketManager.h" />
+    <ClInclude Include="Room.h" />
     <ClInclude Include="RoomManager.h" />
     <ClInclude Include="Server.h" />
     <ClInclude Include="SHA256.h" />

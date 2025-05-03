@@ -15,8 +15,6 @@ private:
 
 	void HandleHandshake(sf::Packet& packet);
 
-	void HandleTest(sf::Packet& packet);
-
 	void SendHandshake(const std::string guid);
 
 public:

@@ -24,8 +24,7 @@ void Client::HandleIncomingPackets()
 	sf::Socket::Status status = socket->receive(customPacket.packet);
 
 	if (status == sf::Socket::Status::Done) {
-		customPacket.packet >> customPacket.type;
-		EVENT_MANAGER.Emit(customPacket.type, guid, customPacket);
+		PACKET_MANAGER.ProcessPacket(guid, customPacket);
 	}
 	else if (status == sf::Socket::Status::Disconnected)
 	{
