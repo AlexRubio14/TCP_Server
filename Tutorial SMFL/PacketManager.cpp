@@ -24,7 +24,7 @@ void PacketManager::SendHandshake(const std::string guid)
 	std::string responseMessage = "Hello client, i'm the server";
 	CustomPacket responsePacket(HANDSHAKE);
 
-	responsePacket.packet << responsePacket.type << responseMessage;
+	responsePacket.packet << responseMessage;
 
 	std::shared_ptr<Client> client = CLIENT_MANAGER.GetPendingClientById(guid);
 	if (client != nullptr)
