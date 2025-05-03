@@ -17,7 +17,7 @@ public:
 	void AddClient(std::shared_ptr<Client> client);
 	void RemoveClient(std::shared_ptr<Client> client);
 
-	void CheckIfRoomFull();
+	void CheckIfRoomFull(std::shared_ptr<Client> client);
 	void CheckIfRoomEmpty();
 
 	inline std::string GetId() const { return id; }

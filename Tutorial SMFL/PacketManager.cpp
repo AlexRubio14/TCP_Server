@@ -208,6 +208,7 @@ void PacketManager::Init()
 		std::string roomId;
 		customPacket.packet >> roomId;
 		std::shared_ptr<Client> client = CLIENT_MANAGER.GetAuthoritedClientById(guid);
+		std::cout << client.get()->GetGuid() << " is trying to join room with id: " << roomId << std::endl;
 		if (client != nullptr && ROOM_MANAGER.JoinRoom(roomId, client))
 		{
 			CustomPacket responsePacket(JOIN_ROOM_SUCCES);
@@ -240,9 +241,17 @@ void PacketManager::Init()
 		});
 
 
-	EVENT_MANAGER.Subscribe(START_GAME, [](std::string guid, CustomPacket& customPacket) {
+	EVENT_MANAGER.Subscribe(START_GAME, [this](std::string guid, CustomPacket& customPacket) {
 		std::cout << "Starting game" << std::endl;
 		//TODO: start game logic
+		std::shared_ptr<Client> client = CLIENT_MANAGER.GetAuthoritedClientById(guid);
+
+		std::string responseMessage = "Game started";
+		CustomPacket responsePacket(START_GAME);
+		responsePacket.packet << responseMessage;
+
+		if (client != nullptr)
+			SendPacketToClient(client, responsePacket);
 		});
 }
 

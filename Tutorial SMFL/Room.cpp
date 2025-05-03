@@ -12,7 +12,7 @@ void Room::AddClient(std::shared_ptr<Client> client)
 {
 	clients.push_back(client);
 	std::cout << "Client added to room" << std::endl;
-	CheckIfRoomFull();
+	CheckIfRoomFull(client);
 }
 
 void Room::RemoveClient(std::shared_ptr<Client> client)
@@ -30,13 +30,17 @@ void Room::RemoveClient(std::shared_ptr<Client> client)
 	}
 }
 
-void Room::CheckIfRoomFull()
+void Room::CheckIfRoomFull(std::shared_ptr<Client> client)
 {
 	if (clients.size() >= 4)
 	{
 		std::cout << "Room is full" << std::endl;
 		CustomPacket customPacket;
-		EVENT_MANAGER.Emit(START_GAME, "", customPacket);
+		std::cout << "Sending packet to client: " << client->GetGuid() << std::endl;	
+		for (std::shared_ptr<Client> client : clients)
+		{
+			EVENT_MANAGER.Emit(START_GAME, client.get()->GetGuid(), customPacket);
+		}
 	}
 
 	std::cout << "The size of the room is: " << clients.size() << std::endl;
