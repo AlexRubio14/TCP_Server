@@ -3,6 +3,7 @@
 #include "EventManager.h"
 #include "DatabaseManager.h"
 #include "ClientManager.h"
+#include "RoomManager.h"
 void PacketManager::HandleHandshake(sf::Packet& packet)
 {
 	std::string messageFromClient;
@@ -11,20 +12,12 @@ void PacketManager::HandleHandshake(sf::Packet& packet)
 	std::cout << "Messages received from client: " << messageFromClient << std::endl;
 }
 
-void PacketManager::HandleTest(sf::Packet& packet)
-{
-	std::string message;
-	packet >> message;
-	
-	std::cout << "Message received from client: " << message << std::endl;
-}
-
 void PacketManager::SendHandshake(const std::string guid)
 {
 	std::string responseMessage = "Hello client, i'm the server";
 	CustomPacket responsePacket(HANDSHAKE);
 
-	responsePacket.packet << responsePacket.type << responseMessage;
+	responsePacket.packet << responseMessage;
 
 	std::shared_ptr<Client> client = CLIENT_MANAGER.GetPendingClientById(guid);
 	if (client != nullptr)
@@ -47,14 +40,12 @@ void PacketManager::Init()
 		SendHandshake(guid);
 	});
 
-	EVENT_MANAGER.Subscribe(TEST, [this](std::string guid, CustomPacket& customPacket) {
-		HandleTest(customPacket.packet);
-	});
-
 	EVENT_MANAGER.Subscribe(REGISTER, [](std::string guid, CustomPacket& customPacket) {
 		std::string username;
 		std::string password;
 		customPacket.packet >> username >> password;
+
+		std::cout << std::endl << "Username is: " << username << " and the password is: " << password;
 
 		std::string message;
 		CustomPacket responsePacket;
@@ -174,11 +165,92 @@ void PacketManager::Init()
 		if (client != nullptr)
 			SendPacketToClient(client, customPacket);
 	});
+
+	EVENT_MANAGER.Subscribe(CREATE_ROOM, [](std::string guid, CustomPacket& customPacket) {
+		std::string roomId;
+		customPacket.packet >> roomId;
+		std::cout << "Creating room with id: " << roomId << std::endl;
+		std::shared_ptr<Client> client = CLIENT_MANAGER.GetAuthoritedClientById(guid);
+		if (client && ROOM_MANAGER.CreateRoom(roomId, client))
+		{
+			std::string responseMessage = "Room created successfully";
+			CustomPacket responsePacket(CREATE_ROOM_SUCCES);
+			responsePacket.packet << responseMessage;
+			EVENT_MANAGER.Emit(CREATE_ROOM_SUCCES, guid, responsePacket);
+		}
+		else
+		{
+			std::string responseMessage = "A room with the id you entered already exists";
+			CustomPacket responsePacket(CREATE_ROOM_ERROR);
+			responsePacket.packet << responseMessage;
+			EVENT_MANAGER.Emit(CREATE_ROOM_ERROR, guid, responsePacket);
+		}
+		});
+
+	EVENT_MANAGER.Subscribe(CREATE_ROOM_ERROR, [this](std::string guid, CustomPacket& customPacket) {
+
+		std::shared_ptr<Client> client = CLIENT_MANAGER.GetAuthoritedClientById(guid);
+
+		if (client != nullptr)
+			SendPacketToClient(client, customPacket);
+		std::cout << "Error creating room: " << std::endl;
+		});
+
+	EVENT_MANAGER.Subscribe(CREATE_ROOM_SUCCES, [this](std::string guid, CustomPacket& customPacket) {
+		std::shared_ptr<Client> client = CLIENT_MANAGER.GetAuthoritedClientById(guid);
+
+		if (client != nullptr)
+			SendPacketToClient(client, customPacket);
+		std::cout << "Room created succesfully" << std::endl;
+		});
+
+	EVENT_MANAGER.Subscribe(JOIN_ROOM, [](std::string guid, CustomPacket& customPacket) {
+		std::string roomId;
+		customPacket.packet >> roomId;
+		std::shared_ptr<Client> client = CLIENT_MANAGER.GetAuthoritedClientById(guid);
+		if (client != nullptr && ROOM_MANAGER.JoinRoom(roomId, client))
+		{
+			CustomPacket responsePacket(JOIN_ROOM_SUCCES);
+			std::string responseMessage = "The user joined the room successfully";
+			responsePacket.packet << responseMessage;
+			EVENT_MANAGER.Emit(JOIN_ROOM_SUCCES, guid, responsePacket);
+			client->SetCurrentRoomId(roomId);
+		}
+		else
+		{
+			CustomPacket responsePacket(JOIN_ROOM_ERROR);
+			std::string responseMessage = "The user can't join to the room, try with another id";
+			responsePacket.packet << responseMessage;
+			EVENT_MANAGER.Emit(JOIN_ROOM_SUCCES, guid, responsePacket);
+		}
+		});
+
+	EVENT_MANAGER.Subscribe(JOIN_ROOM_ERROR, [this](std::string guid, CustomPacket& customPacket) {
+		std::shared_ptr<Client> client = CLIENT_MANAGER.GetAuthoritedClientById(guid);
+
+		if (client != nullptr)
+			SendPacketToClient(client, customPacket);
+		});
+
+	EVENT_MANAGER.Subscribe(JOIN_ROOM_SUCCES, [this](std::string guid, CustomPacket& customPacket) {
+		std::shared_ptr<Client> client = CLIENT_MANAGER.GetAuthoritedClientById(guid);
+
+		if (client != nullptr)
+			SendPacketToClient(client, customPacket);
+		});
+
+
+	EVENT_MANAGER.Subscribe(START_GAME, [](std::string guid, CustomPacket& customPacket) {
+		std::cout << "Starting game" << std::endl;
+		//TODO: start game logic
+		});
 }
 
-void PacketManager::ProcessPacket(std::string guid, CustomPacket customPacket)
+void PacketManager::ProcessPacket(std::string guid, CustomPacket customPacket)   
 {
 	customPacket.packet >> customPacket.type;
+
+	std::cout << "Processing packet of type: " << customPacket.type << std::endl;
 
 	EVENT_MANAGER.Emit(customPacket.type, guid, customPacket);
 }

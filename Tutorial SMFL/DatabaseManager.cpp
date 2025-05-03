@@ -2,6 +2,12 @@
 #include "bcrypt/include/bcrypt.h"
 #include <cassert>
 
+DatabaseManager& DatabaseManager::Instance()
+{
+    static DatabaseManager instance;
+    return instance;
+}
+
 void DatabaseManager::ConnectDb()
 {
     try

@@ -26,11 +26,7 @@ private:
 	DatabaseManager& operator=(const DatabaseManager&) = delete;
 
 public:
-	static DatabaseManager& Instance()
-	{
-		static DatabaseManager instance;
-		return instance;
-	}
+	static DatabaseManager& Instance();
 	void ConnectDb();
 	void DisconnectDb();
 	RegisterResult CreateUser(const std::string& username, const std::string& password);
