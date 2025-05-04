@@ -22,5 +22,6 @@ public:
 
 	inline std::string GetId() const { return id; }
 	inline void SetId(const std::string id) { this->id = id; }
+	inline std::vector<std::shared_ptr<Client>> GetClients() const { return clients; }
 
 };

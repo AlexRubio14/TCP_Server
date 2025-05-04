@@ -1,5 +1,7 @@
 #include "RoomManager.h"
 
+RoomManager::RoomManager() : roomSize(2) {}
+
 RoomManager& RoomManager::Instance()
 {
 	static RoomManager instance;
@@ -12,10 +14,10 @@ bool RoomManager::CreateRoom(const std::string& roomId, std::shared_ptr<Client> 
 
 	if (roomIt == rooms.end()) // There isn't a room with the id, then we create it
 	{
-		std::unique_ptr<Room> room = std::make_unique<Room>(roomId);
+		std::shared_ptr<Room> room = std::make_shared<Room>(roomId);
+		rooms.push_back(room);
 		room->AddClient(client);
-		rooms.push_back(std::move(room));
-
+		std::cout << rooms.size();
 		return true;
 	}
 
@@ -68,10 +70,29 @@ void RoomManager::DeleteRoom(const std::string& roomId)
 	}
 }
 
-std::vector<std::unique_ptr<Room>>::iterator RoomManager::FindRoomById(const std::string& roomId)
+Room* RoomManager::GetFullRoom()
 {
 	auto roomIt = std::find_if(rooms.begin(), rooms.end(),
-		[roomId](const std::unique_ptr<Room>& room) {
+		[this](const std::shared_ptr<Room>& room) {
+			return room->GetClients().size() >= roomSize;
+		});
+
+	if (roomIt != rooms.end())
+	{
+		std::cout << "Full room found with ID: " << (*roomIt)->GetId() << std::endl;
+		return roomIt->get();
+	}
+	else
+	{
+		std::cerr << "No full room found." << std::endl;
+		return nullptr;
+	}
+}
+
+std::vector<std::shared_ptr<Room>>::iterator RoomManager::FindRoomById(const std::string& roomId)
+{
+	auto roomIt = std::find_if(rooms.begin(), rooms.end(),
+		[roomId](const std::shared_ptr<Room>& room) {
 			return room->GetId() == roomId;
 		});
 

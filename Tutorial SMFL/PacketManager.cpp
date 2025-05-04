@@ -246,12 +246,36 @@ void PacketManager::Init()
 		//TODO: start game logic
 		std::shared_ptr<Client> client = CLIENT_MANAGER.GetAuthoritedClientById(guid);
 
-		std::string responseMessage = "Game started";
-		CustomPacket responsePacket(START_GAME);
-		responsePacket.packet << responseMessage;
+		Room* room = ROOM_MANAGER.GetFullRoom();
 
-		if (client != nullptr)
-			SendPacketToClient(client, responsePacket);
+		int clientCount = room->GetClients().size();
+
+		std::string ip, username;
+		int index;
+
+		CustomPacket responsePacket(START_GAME);
+
+		int clientIndex;
+
+		for (int i = 0; i < clientCount; i++) // Write every client data in the room
+		{
+			ip = room->GetClients()[i]->GetSocket().getRemoteAddress().value().toString();
+			username = room->GetClients()[i]->GetUsername();
+			index = i;
+			responsePacket.packet << ip << username << index;
+
+			if (client->GetGuid() == room->GetClients()[i]->GetGuid())
+				clientIndex = i;
+		}
+
+		// Write the client data to know who you are
+
+		ip = client->GetSocket().getRemoteAddress().value().toString();
+		username = client->GetUsername();
+		responsePacket.packet << ip << username << clientIndex;
+
+		SendPacketToClient(client, responsePacket);
+
 		});
 }
 

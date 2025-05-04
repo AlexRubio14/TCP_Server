@@ -32,7 +32,7 @@ void Room::RemoveClient(std::shared_ptr<Client> client)
 
 void Room::CheckIfRoomFull(std::shared_ptr<Client> client)
 {
-	if (clients.size() >= 4)
+	if (clients.size() >= ROOM_MANAGER.GetRoomSize())
 	{
 		std::cout << "Room is full" << std::endl;
 		CustomPacket customPacket;
