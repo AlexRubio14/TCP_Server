@@ -12,7 +12,6 @@ void Room::AddClient(std::shared_ptr<Client> client)
 {
 	clients.push_back(client);
 	std::cout << "Client added to room" << std::endl;
-	CheckIfRoomFull(client);
 }
 
 void Room::RemoveClient(std::shared_ptr<Client> client)

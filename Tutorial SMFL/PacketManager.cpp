@@ -216,13 +216,15 @@ void PacketManager::Init()
 			responsePacket.packet << responseMessage;
 			EVENT_MANAGER.Emit(JOIN_ROOM_SUCCES, guid, responsePacket);
 			client->SetCurrentRoomId(roomId);
+			std::vector<std::shared_ptr<Room>>::iterator roomIt = ROOM_MANAGER.FindRoomById(client->GetCurrentRoomId());
+			roomIt->get()->CheckIfRoomFull(client);
 		}
 		else
 		{
 			CustomPacket responsePacket(JOIN_ROOM_ERROR);
 			std::string responseMessage = "The user can't join to the room, try with another id";
 			responsePacket.packet << responseMessage;
-			EVENT_MANAGER.Emit(JOIN_ROOM_SUCCES, guid, responsePacket);
+			EVENT_MANAGER.Emit(JOIN_ROOM_ERROR, guid, responsePacket);
 		}
 		});
 
@@ -255,24 +257,14 @@ void PacketManager::Init()
 
 		CustomPacket responsePacket(START_GAME);
 
-		int clientIndex;
-
 		for (int i = 0; i < clientCount; i++) // Write every client data in the room
 		{
 			ip = room->GetClients()[i]->GetSocket().getRemoteAddress().value().toString();
 			username = room->GetClients()[i]->GetUsername();
 			index = i;
 			responsePacket.packet << ip << username << index;
-
-			if (client->GetGuid() == room->GetClients()[i]->GetGuid())
-				clientIndex = i;
+			std::cout << "Client ip: " << ip << " and username: " << username << "and index: " << i << std::endl;
 		}
-
-		// Write the client data to know who you are
-
-		ip = client->GetSocket().getRemoteAddress().value().toString();
-		username = client->GetUsername();
-		responsePacket.packet << ip << username << clientIndex;
 
 		SendPacketToClient(client, responsePacket);
 
