@@ -208,6 +208,7 @@ void PacketManager::Init()
 		std::string roomId;
 		customPacket.packet >> roomId;
 		std::shared_ptr<Client> client = CLIENT_MANAGER.GetAuthoritedClientById(guid);
+		std::cout << client.get()->GetGuid() << " is trying to join room with id: " << roomId << std::endl;
 		if (client != nullptr && ROOM_MANAGER.JoinRoom(roomId, client))
 		{
 			CustomPacket responsePacket(JOIN_ROOM_SUCCES);
@@ -240,9 +241,41 @@ void PacketManager::Init()
 		});
 
 
-	EVENT_MANAGER.Subscribe(START_GAME, [](std::string guid, CustomPacket& customPacket) {
+	EVENT_MANAGER.Subscribe(START_GAME, [this](std::string guid, CustomPacket& customPacket) {
 		std::cout << "Starting game" << std::endl;
 		//TODO: start game logic
+		std::shared_ptr<Client> client = CLIENT_MANAGER.GetAuthoritedClientById(guid);
+
+		Room* room = ROOM_MANAGER.GetFullRoom();
+
+		int clientCount = room->GetClients().size();
+
+		std::string ip, username;
+		int index;
+
+		CustomPacket responsePacket(START_GAME);
+
+		int clientIndex;
+
+		for (int i = 0; i < clientCount; i++) // Write every client data in the room
+		{
+			ip = room->GetClients()[i]->GetSocket().getRemoteAddress().value().toString();
+			username = room->GetClients()[i]->GetUsername();
+			index = i;
+			responsePacket.packet << ip << username << index;
+
+			if (client->GetGuid() == room->GetClients()[i]->GetGuid())
+				clientIndex = i;
+		}
+
+		// Write the client data to know who you are
+
+		ip = client->GetSocket().getRemoteAddress().value().toString();
+		username = client->GetUsername();
+		responsePacket.packet << ip << username << clientIndex;
+
+		SendPacketToClient(client, responsePacket);
+
 		});
 }
 
