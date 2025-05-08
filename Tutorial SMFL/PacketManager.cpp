@@ -284,10 +284,11 @@ void PacketManager::Init()
 				std::string ip = roomClients[j]->GetSocket().getRemoteAddress().value().toString();
 				std::string username = roomClients[j]->GetUsername();
 				int port = roomClients[j]->GetPort();
+				std::string guid = roomClients[j]->GetGuid();
 
-				responsePacket.packet << ip << username << j << port;
+				responsePacket.packet << ip << username << j << port << guid;
 
-				std::cout << "Client ip: " << ip << " | username: " << username << " | index: " << j << " | port: " << port << std::endl;
+				std::cout << "Client ip: " << ip << " | username: " << username << " | index: " << j << " | port: " << port << " | guid: " << guid << std::endl;
 			}
 
 			targetClient->SetIsInRoom(false);
