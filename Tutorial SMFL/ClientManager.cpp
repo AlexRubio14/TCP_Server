@@ -141,6 +141,26 @@ std::shared_ptr<Client> ClientManager::GetAuthoritedClientById(const std::string
     }
 }
 
+bool ClientManager::CheckIfUserAlreadyLogged(const std::string& username) const
+{
+	const auto& clientIt = std::find_if(authenticatedClients.begin(), authenticatedClients.end(),
+		[username](const std::pair<const std::string, std::shared_ptr<Client>> pair) {
+			const std::string currentUsername = pair.second->GetUsername();
+			if (currentUsername == username)
+			{
+				std::cerr << "Client with username: " << username << " is already logged" << std::endl;
+				return true;
+			}
+			return false;
+		});
+
+	if (clientIt != authenticatedClients.end())
+		return true;
+
+	std::cerr << "Client with username: " << username << "not logged yet" << std::endl;
+	return false;
+}
+
 std::shared_ptr<Client> ClientManager::GetPendingClientById(const std::string guid)
 {
     const auto clientIt = std::find_if(pendingClients.begin(), pendingClients.end(),

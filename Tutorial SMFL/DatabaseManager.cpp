@@ -1,6 +1,7 @@
 #include "DatabaseManager.h"
 #include "bcrypt/include/bcrypt.h"
 #include <cassert>
+#include "ClientManager.h"
 
 DatabaseManager& DatabaseManager::Instance()
 {
@@ -100,6 +101,10 @@ LoginResult DatabaseManager::ValidateUser(const std::string& username, const std
 			// CHeck if the password is correct
 			if (bcrypt::validatePassword(password, hashedPassword))
 			{
+                // Check if user is already logged
+                if (CLIENT_MANAGER.CheckIfUserAlreadyLogged(username))
+                    return LoginResult::USER_ALREADY_LOGGED;
+
 				std::cout << "User validated" << std::endl;
 				return LoginResult::SUCCESS;
 			}

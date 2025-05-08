@@ -137,6 +137,13 @@ void PacketManager::Init()
 			std::cout << "User " << username << " failed to log in because: " << message << std::endl;
 
 			break;
+
+		case LoginResult::USER_ALREADY_LOGGED:
+			message = "The user is already logged";
+			responsePacket.packet << LOGIN_ERROR << message;
+			EVENT_MANAGER.Emit(LOGIN_ERROR, guid, responsePacket);
+			std::cout << "User" << username << " failed to log in because: " << message << std::endl;
+			break;
 		case LoginResult::QUERY_ERROR:
 
 			message = "Error querying the database";
