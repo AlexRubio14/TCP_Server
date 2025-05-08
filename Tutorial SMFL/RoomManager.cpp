@@ -1,6 +1,6 @@
 #include "RoomManager.h"
 
-RoomManager::RoomManager() : roomSize(4) {}
+RoomManager::RoomManager() : roomSize(2) {}
 
 RoomManager& RoomManager::Instance()
 {

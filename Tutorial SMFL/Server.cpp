@@ -37,7 +37,10 @@ void Server::Start()
                 std::cerr << "Trying to disconnect non-existing client ( guid = " << guid << ")" << std::endl;
             
             CLIENT_MANAGER.DisconnectClient(guid);
-			ROOM_MANAGER.LeaveRoom(client->GetCurrentRoomId(), client);
+
+            if(client->GetIsInRoom())
+			    ROOM_MANAGER.LeaveRoom(client->GetCurrentRoomId(), client);
+
         });
 
 		PACKET_MANAGER.Init();

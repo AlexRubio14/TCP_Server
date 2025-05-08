@@ -9,6 +9,7 @@ Client::Client()
     socket = std::make_unique<sf::TcpSocket>();
     clientState = NONE;
     guid = "0";
+	isInRoom = false;
 }
 
 Client::~Client()
