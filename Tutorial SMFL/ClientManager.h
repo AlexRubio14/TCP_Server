@@ -39,5 +39,6 @@ public:
     void InitAuthenticatedClient(Client& client, const std::string username);
 
     std::shared_ptr<Client> GetAuthoritedClientById(const std::string guid);
+    bool CheckIfUserAlreadyLogged(const std::string& username) const;
     std::shared_ptr<Client> GetPendingClientById(const std::string guid);
 };

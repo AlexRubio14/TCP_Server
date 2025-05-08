@@ -21,12 +21,11 @@ void Room::RemoveClient(std::shared_ptr<Client> client)
 	{
 		clients.erase(clientsIt, clients.end());
 		std::cout << "Client: " << client->GetGuid() << " removed from room" << std::endl;
-		CheckIfRoomEmpty();
+
+		CheckIfRoomEmpty(id);
 	}
 	else
-	{
 		std::cerr << "Client not found in room" << std::endl;
-	}
 }
 
 void Room::CheckIfRoomFull(std::shared_ptr<Client> client)
@@ -35,17 +34,14 @@ void Room::CheckIfRoomFull(std::shared_ptr<Client> client)
 	{
 		std::cout << "Room is full" << std::endl;
 		CustomPacket customPacket;
-		std::cout << "Sending packet to client: " << client->GetGuid() << std::endl;	
-		for (std::shared_ptr<Client> client : clients)
-		{
-			EVENT_MANAGER.Emit(START_GAME, client.get()->GetGuid(), customPacket);
-		}
+		std::cout << "Starting game" << std::endl;
+		EVENT_MANAGER.Emit(START_GAME, client.get()->GetGuid(), customPacket);
 	}
 
 	std::cout << "The size of the room is: " << clients.size() << std::endl;
 }
 
-void Room::CheckIfRoomEmpty()
+void Room::CheckIfRoomEmpty(const std::string id)
 {
 	if (clients.size() == 0)
 	{

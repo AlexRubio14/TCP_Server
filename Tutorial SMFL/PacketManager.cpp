@@ -137,6 +137,13 @@ void PacketManager::Init()
 			std::cout << "User " << username << " failed to log in because: " << message << std::endl;
 
 			break;
+
+		case LoginResult::USER_ALREADY_LOGGED:
+			message = "The user is already logged";
+			responsePacket.packet << LOGIN_ERROR << message;
+			EVENT_MANAGER.Emit(LOGIN_ERROR, guid, responsePacket);
+			std::cout << "User" << username << " failed to log in because: " << message << std::endl;
+			break;
 		case LoginResult::QUERY_ERROR:
 
 			message = "Error querying the database";
@@ -176,6 +183,7 @@ void PacketManager::Init()
 			std::string responseMessage = "Room created successfully";
 			CustomPacket responsePacket(CREATE_ROOM_SUCCES);
 			responsePacket.packet << responseMessage;
+			client->SetCurrentRoomId(roomId);
 			EVENT_MANAGER.Emit(CREATE_ROOM_SUCCES, guid, responsePacket);
 		}
 		else
@@ -214,10 +222,8 @@ void PacketManager::Init()
 			CustomPacket responsePacket(JOIN_ROOM_SUCCES);
 			std::string responseMessage = "The user joined the room successfully";
 			responsePacket.packet << responseMessage;
-			EVENT_MANAGER.Emit(JOIN_ROOM_SUCCES, guid, responsePacket);
 			client->SetCurrentRoomId(roomId);
-			std::vector<std::shared_ptr<Room>>::iterator roomIt = ROOM_MANAGER.FindRoomById(client->GetCurrentRoomId());
-			roomIt->get()->CheckIfRoomFull(client);
+			EVENT_MANAGER.Emit(JOIN_ROOM_SUCCES, guid, responsePacket);
 		}
 		else
 		{
@@ -239,34 +245,62 @@ void PacketManager::Init()
 		std::shared_ptr<Client> client = CLIENT_MANAGER.GetAuthoritedClientById(guid);
 
 		if (client != nullptr)
+		{
+			client->SetIsInRoom(true);
 			SendPacketToClient(client, customPacket);
+		}
+		});
+
+	EVENT_MANAGER.Subscribe(ENTER_ROOM, [this](std::string guid, CustomPacket& customPacket) {
+		
+		std::shared_ptr<Client> client = CLIENT_MANAGER.GetAuthoritedClientById(guid);
+		std::string clientPort;
+		std::cout << clientPort << std::endl;
+		customPacket.packet >> clientPort;
+
+		int port = std::stoi(clientPort);
+		if (client != nullptr)
+		{
+			client->SetPort(port);
+			std::cout << "The client: " << client->GetUsername() << " is listening in port: " << client->GetPort() << std::endl;
+
+			std::vector<std::shared_ptr<Room>>::iterator roomIt = ROOM_MANAGER.FindRoomById(client->GetCurrentRoomId());
+			roomIt->get()->CheckIfRoomFull(client);
+		}
 		});
 
 
 	EVENT_MANAGER.Subscribe(START_GAME, [this](std::string guid, CustomPacket& customPacket) {
-		std::cout << "Starting game" << std::endl;
-		//TODO: start game logic
 		std::shared_ptr<Client> client = CLIENT_MANAGER.GetAuthoritedClientById(guid);
 
 		Room* room = ROOM_MANAGER.GetFullRoom();
+		std::vector<std::shared_ptr<Client>> roomClients = room->GetClients();
+		int clientCount = roomClients.size();
 
-		int clientCount = room->GetClients().size();
-
-		std::string ip, username;
-		int index;
-
-		CustomPacket responsePacket(START_GAME);
-
-		for (int i = 0; i < clientCount; i++) // Write every client data in the room
+		// Send to every Client
+		for (int i = 0; i < clientCount; ++i)
 		{
-			ip = room->GetClients()[i]->GetSocket().getRemoteAddress().value().toString();
-			username = room->GetClients()[i]->GetUsername();
-			index = i;
-			responsePacket.packet << ip << username << index;
-			std::cout << "Client ip: " << ip << " and username: " << username << "and index: " << i << std::endl;
-		}
+			std::shared_ptr<Client> targetClient = roomClients[i];
 
-		SendPacketToClient(client, responsePacket);
+			CustomPacket responsePacket(START_GAME);
+			responsePacket.packet << i; 
+
+			// Add data for very client in the room
+			for (int j = 0; j < clientCount; ++j)
+			{
+				std::string ip = roomClients[j]->GetSocket().getRemoteAddress().value().toString();
+				std::string username = roomClients[j]->GetUsername();
+				int port = roomClients[j]->GetPort();
+				std::string guid = roomClients[j]->GetGuid();
+
+				responsePacket.packet << ip << username << j << port << guid;
+
+				std::cout << "Client ip: " << ip << " | username: " << username << " | index: " << j << " | port: " << port << " | guid: " << guid << std::endl;
+			}
+
+			targetClient->SetIsInRoom(false);
+			SendPacketToClient(targetClient, responsePacket);
+		}
 
 		});
 }
