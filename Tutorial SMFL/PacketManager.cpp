@@ -208,7 +208,10 @@ void PacketManager::Init()
 		std::shared_ptr<Client> client = CLIENT_MANAGER.GetAuthoritedClientById(guid);
 
 		if (client != nullptr)
+		{
 			SendPacketToClient(client, customPacket);
+			client->SetIsInRoom(true);
+		}
 		std::cout << "Room created succesfully" << std::endl;
 		});
 
@@ -248,11 +251,16 @@ void PacketManager::Init()
 		{
 			client->SetIsInRoom(true);
 			SendPacketToClient(client, customPacket);
+			std::vector<std::shared_ptr<Room>>::iterator roomIt = ROOM_MANAGER.FindRoomById(client->GetCurrentRoomId());
+			roomIt->get()->CheckIfRoomFull(client);
 		}
 		});
 
 	EVENT_MANAGER.Subscribe(ENTER_ROOM, [this](std::string guid, CustomPacket& customPacket) {
 		
+		std::cout << ">> ENTER_ROOM handler triggered for GUID: " << guid << std::endl;
+
+
 		std::shared_ptr<Client> client = CLIENT_MANAGER.GetAuthoritedClientById(guid);
 		std::string clientPort;
 		std::cout << clientPort << std::endl;
@@ -263,14 +271,13 @@ void PacketManager::Init()
 		{
 			client->SetPort(port);
 			std::cout << "The client: " << client->GetUsername() << " is listening in port: " << client->GetPort() << std::endl;
-
-			std::vector<std::shared_ptr<Room>>::iterator roomIt = ROOM_MANAGER.FindRoomById(client->GetCurrentRoomId());
-			roomIt->get()->CheckIfRoomFull(client);
 		}
 		});
 
 
 	EVENT_MANAGER.Subscribe(START_GAME, [this](std::string guid, CustomPacket& customPacket) {
+
+
 		std::shared_ptr<Client> client = CLIENT_MANAGER.GetAuthoritedClientById(guid);
 
 		Room* room = ROOM_MANAGER.GetFullRoom();
@@ -298,7 +305,6 @@ void PacketManager::Init()
 				std::cout << "Client ip: " << ip << " | username: " << username << " | index: " << j << " | port: " << port << " | guid: " << guid << std::endl;
 			}
 
-			targetClient->SetIsInRoom(false);
 			SendPacketToClient(targetClient, responsePacket);
 		}
 
