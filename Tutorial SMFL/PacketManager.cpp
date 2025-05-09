@@ -281,6 +281,13 @@ void PacketManager::Init()
 		std::shared_ptr<Client> client = CLIENT_MANAGER.GetAuthoritedClientById(guid);
 
 		Room* room = ROOM_MANAGER.GetFullRoom();
+
+		if (room == nullptr)
+		{
+			std::cout << "The room returned was nullptr" << std::endl;
+			return;
+		}
+
 		std::vector<std::shared_ptr<Client>> roomClients = room->GetClients();
 		int clientCount = roomClients.size();
 

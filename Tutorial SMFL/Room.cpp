@@ -6,6 +6,7 @@
 Room::Room(const std::string id)
 {
 	this->id = id;
+	isClosed = false;
 }
 
 Room::~Room()
@@ -35,12 +36,9 @@ void Room::RemoveClient(std::shared_ptr<Client> client)
 
 void Room::CheckIfRoomFull(std::shared_ptr<Client> client)
 {
-	std::cout << ">> CheckIfRoomFull() called by client: " << client->GetUsername()
-		<< " | Room ptr: " << this
-		<< " | isClosed: " << isClosed
-		<< " | Room ID: " << id << std::endl;
+	std::lock_guard<std::mutex> lock(roomMutex);
 
-	if (clients.size() >= ROOM_MANAGER.GetRoomSize())
+	if (!isClosed && clients.size() >= ROOM_MANAGER.GetRoomSize())
 	{
 		std::cout << "Room is full" << std::endl;
 		CustomPacket customPacket;

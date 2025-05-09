@@ -3,6 +3,7 @@
 #include "Client.h"
 #include <memory>
 #include <iostream>
+#include <mutex>
 
 class Room
 {
@@ -10,6 +11,8 @@ private:
 	std::string id;
 	bool isClosed;
 	std::vector<std::shared_ptr<Client>> clients;	
+
+	std::mutex roomMutex;
 public:
 
 	Room() = default;
