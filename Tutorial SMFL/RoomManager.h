@@ -24,6 +24,7 @@ public:
 	Room* GetFullRoom();
 	std::vector<std::shared_ptr<Room>>::iterator FindRoomById(const std::string& roomId);
 
+	inline std::vector<std::shared_ptr<Room>> GetRooms() const { return rooms; }
 	inline int GetRoomSize() const { return roomSize; }
 };
 

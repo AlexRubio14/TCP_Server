@@ -6,6 +6,12 @@
 Room::Room(const std::string id)
 {
 	this->id = id;
+	isClosed = false;
+}
+
+Room::~Room()
+{
+	std::cout << "Room erased" << std::endl;
 }
 
 void Room::AddClient(std::shared_ptr<Client> client)
@@ -30,11 +36,14 @@ void Room::RemoveClient(std::shared_ptr<Client> client)
 
 void Room::CheckIfRoomFull(std::shared_ptr<Client> client)
 {
-	if (clients.size() >= ROOM_MANAGER.GetRoomSize())
+	std::lock_guard<std::mutex> lock(roomMutex);
+
+	if (!isClosed && clients.size() >= ROOM_MANAGER.GetRoomSize())
 	{
 		std::cout << "Room is full" << std::endl;
 		CustomPacket customPacket;
 		std::cout << "Starting game" << std::endl;
+		isClosed = true;
 		EVENT_MANAGER.Emit(START_GAME, client.get()->GetGuid(), customPacket);
 	}
 
@@ -43,9 +52,12 @@ void Room::CheckIfRoomFull(std::shared_ptr<Client> client)
 
 void Room::CheckIfRoomEmpty(const std::string id)
 {
+	std::cout << std::endl << std::endl << clients.size() << std::endl << std::endl;
 	if (clients.size() == 0)
 	{
 		std::cout << "Room is empty" << std::endl;
+		auto rooms = ROOM_MANAGER.GetRooms();
+		std::cout <<  rooms .size() << std::endl;
 		ROOM_MANAGER.DeleteRoom(id);
 	}
 }

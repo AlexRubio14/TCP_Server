@@ -38,7 +38,9 @@ void Server::Start()
             
             CLIENT_MANAGER.DisconnectClient(guid);
 
-            if(client->GetIsInRoom())
+            std::cout << std::endl << std::endl << client->GetIsInRoom() << std::endl << std::endl;
+
+            if (client->GetIsInRoom())
 			    ROOM_MANAGER.LeaveRoom(client->GetCurrentRoomId(), client);
 
         });
