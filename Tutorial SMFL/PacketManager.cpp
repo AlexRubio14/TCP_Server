@@ -45,8 +45,6 @@ void PacketManager::Init()
 		std::string password;
 		customPacket.packet >> username >> password;
 
-		std::cout << std::endl << "Username is: " << username << " and the password is: " << password;
-
 		std::string message;
 		CustomPacket responsePacket;
 

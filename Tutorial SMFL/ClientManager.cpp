@@ -157,7 +157,7 @@ bool ClientManager::CheckIfUserAlreadyLogged(const std::string& username) const
 	if (clientIt != authenticatedClients.end())
 		return true;
 
-	std::cerr << "Client with username: " << username << "not logged yet" << std::endl;
+	std::cerr << "Client with username: " << username << " not logged yet" << std::endl;
 	return false;
 }
 
