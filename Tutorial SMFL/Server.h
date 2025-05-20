@@ -4,7 +4,7 @@
 #include <memory>
 #include "ClientManager.h"
 
-#define LISTENER_PORT 55000
+#define LISTENER_PORT 55001
 
 class Server {
 private:
