@@ -23,8 +23,8 @@ public:
 
 	void Init();
 
-	void ProcessPacket(std::string guid, CustomPacket customPacket);
+	void ProcessPacket(const std::string& guid, CustomPacket& customPacket);
 
-	void SendPacketToClient(const std::shared_ptr<Client> client, CustomPacket& responsePacket);
+	void SendPacketToClient(const std::shared_ptr<Client>& client, CustomPacket& responsePacket);
 };
 

@@ -3,6 +3,8 @@
 #include <iostream>
 #include <memory>
 #include "ClientManager.h"
+#include "EventManager.h"
+#include "DatabaseManager.h"
 
 #define LISTENER_PORT 55001
 
@@ -12,6 +14,11 @@ private:
     sf::SocketSelector socketSelector;
 
     bool isRunning;
+
+    ClientManager& clientManager;
+    PacketManager& packetManager;
+    EventManager& eventManager;
+    DatabaseManager& databaseManager;
 
 public:
 
@@ -24,5 +31,6 @@ public:
     void Update();
 
     void HandleNewConnection();
+    void HandleDisconnection(const std::string& guid);
 };
 
